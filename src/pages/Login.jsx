@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { loginUser } from "../api/authApi";
-import { useAuth } from "../context/AuthContext";
+// import { loginUser } from "../api/authApi";
+// import { useAuth } from "../context/AuthContext";
+import { useDispatch, useSelector } from "react-redux";
+import { loginAsync } from "../store/slices/authSlice";
 import { useNavigate, Link } from "react-router-dom";
 import { successToast, errorToast } from "../utils/toast";
 import Button from "../components/Button";
@@ -10,10 +12,12 @@ const Login = () => {
     email: "",
     password: ""
   });
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
 
+  // const { setUser } = useAuth();
+  const dispatch = useDispatch();
+  const { actionLoading: loading } = useSelector(state => state.auth);
 
-  const { setUser } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -24,18 +28,23 @@ const Login = () => {
   };
 
   const handleSubmit = async (e) => {
-    setLoading(true);
+    // setLoading(true);
     e.preventDefault();
-    
+
     try {
-    const data = await loginUser(formData);
-    setUser(data);
-    successToast("Login successful!");
-    navigate("/dashboard");
+      // const data = await loginUser(formData);
+      // setUser(data);
+      const resultAction = await dispatch(loginAsync(formData));
+      if (loginAsync.fulfilled.match(resultAction)) {
+        successToast("Login successful!");
+        navigate("/dashboard");
+      } else {
+        errorToast(resultAction.payload || "Login Failed");
+      }
     } catch (error) {
-    errorToast(error.response?.data?.message);
+      errorToast(error.message);
     }
-    };
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100">
@@ -61,9 +70,9 @@ const Login = () => {
             className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
-        <Button type="submit" disabled={loading}>
+          <Button type="submit" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
-        </Button>
+          </Button>
         </form>
 
         <p className="text-sm text-center mt-4">

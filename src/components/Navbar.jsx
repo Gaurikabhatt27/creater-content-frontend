@@ -1,22 +1,31 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+// import { useAuth } from "../context/AuthContext";
 // import { logoutUser } from "../api/authApi";
+import { useDispatch, useSelector } from "react-redux";
+import { logoutAsync } from "../store/slices/authSlice";
 
 const Navbar = () => {
-//   const { user, setUser } = useAuth();
-//   const navigate = useNavigate();
+  //   const { user, setUser } = useAuth();
+  //   const navigate = useNavigate();
 
-// const handleLogout = async () => {
-//   await logoutUser();
-//   setUser(null);
-//   navigate("/login");
-// };
-  const { user, logout } = useAuth();
+  // const handleLogout = async () => {
+  //   await logoutUser();
+  //   setUser(null);
+  //   navigate("/login");
+  // };
+  //   const { user, logout } = useAuth();
+  const { user } = useSelector(state => state.auth);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  
+
+  //   const handleLogout = async () => {
+  //     await logout();
+  //     navigate("/login");
+  //   };
+
   const handleLogout = async () => {
-    await logout();
+    await dispatch(logoutAsync());
     navigate("/login");
   };
 
@@ -68,11 +77,11 @@ const Navbar = () => {
                 + Create Asset
               </Link>
               <Link
-  to="/my-assets"
-  className="text-gray-700 hover:text-blue-600"
->
-  My Assets
-</Link>
+                to="/my-assets"
+                className="text-gray-700 hover:text-blue-600"
+              >
+                My Assets
+              </Link>
 
               {/* Username */}
               <span className="text-gray-600 text-sm">
@@ -107,5 +116,5 @@ const Navbar = () => {
       </div>
     </nav>
   );
-  };
+};
 export default Navbar;
