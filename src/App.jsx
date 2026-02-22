@@ -1,4 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { fetchUserAsync } from "./store/slices/authSlice";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -11,6 +14,12 @@ import CreateAsset from "./pages/CreateAsset";
 import MyAssets from "./pages/MyAsset";
 
 function App() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchUserAsync());
+  }, [dispatch]);
+
   return (
     <BrowserRouter>
       <AuthProvider>
@@ -44,10 +53,10 @@ function App() {
           <Route
             path="/my-assets"
             element={
-                <ProtectedRoute>
-              <Layout>
-                <MyAssets />
-              </Layout>
+              <ProtectedRoute>
+                <Layout>
+                  <MyAssets />
+                </Layout>
               </ProtectedRoute>
             }
           />

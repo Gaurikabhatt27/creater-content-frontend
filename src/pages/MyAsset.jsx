@@ -1,19 +1,24 @@
 import { useEffect, useState } from "react";
-import { getMyAssets } from "../api/assetApi";
+// import { getMyAssets } from "../api/assetApi";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchMyAssetsAsync } from "../store/slices/assetSlice";
 import Layout from "../components/Layout";
 
 const MyAssets = () => {
 
-    const [assets, setAssets] = useState([]);
+    // const [assets, setAssets] = useState([]);
+    const dispatch = useDispatch();
+    const { myAssets: assets, loading, error } = useSelector(state => state.assets);
 
     useEffect(() => {
-        fetchAssets();
-    }, []);
+        // fetchAssets();
+        dispatch(fetchMyAssetsAsync({ page: 1 }));
+    }, [dispatch]);
 
-    const fetchAssets = async () => {
-        const data = await getMyAssets({ page: 1 });
-        setAssets(data.assets);
-    };
+    // const fetchAssets = async () => {
+    //     const data = await getMyAssets({ page: 1 });
+    //     setAssets(data.assets);
+    // };
 
     return (
         <>
@@ -50,8 +55,8 @@ const MyAssets = () => {
 
                             <span
                                 className={`text-xs px-2 py-1 rounded-full ${asset.visibility === "public"
-                                        ? "bg-green-100 text-green-600"
-                                        : "bg-red-100 text-red-600"
+                                    ? "bg-green-100 text-green-600"
+                                    : "bg-red-100 text-red-600"
                                     }`}
                             >
                                 {asset.visibility}

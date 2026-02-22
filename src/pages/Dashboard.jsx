@@ -1,21 +1,26 @@
 // import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
-import { getPublicAssets } from "../api/assetApi";
+// import { getPublicAssets } from "../api/assetApi";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchPublicAssetsAsync } from "../store/slices/assetSlice";
 import Layout from "../components/Layout";
 
 const Dashboard = () => {
 
   // const { user } = useAuth();
-  const [assets, setAssets] = useState([]);
+  // const [assets, setAssets] = useState([]);
+  const dispatch = useDispatch();
+  const { publicAssets: assets, loading, error } = useSelector(state => state.assets);
 
   useEffect(() => {
-    fetchAssets();
-  }, []);
+    // fetchAssets();
+    dispatch(fetchPublicAssetsAsync({ page: 1 }));
+  }, [dispatch]);
 
-  const fetchAssets = async () => {
-    const data = await getPublicAssets({ page: 1 });
-    setAssets(data.assets);
-  };
+  // const fetchAssets = async () => {
+  //   const data = await getPublicAssets({ page: 1 });
+  //   setAssets(data.assets);
+  // };
 
   return (
     <>
