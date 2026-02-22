@@ -7,6 +7,8 @@ import { AuthProvider } from "./context/AuthContext";
 import Layout from "./components/Layout";
 import { Toaster } from "react-hot-toast";
 import VerifyOtp from "./pages/Verifyotp";
+import CreateAsset from "./pages/CreateAsset";
+import MyAssets from "./pages/MyAsset";
 
 function App() {
   return (
@@ -25,6 +27,27 @@ function App() {
                 <Layout>
                   <Dashboard />
                 </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/create-asset"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreateAsset />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-assets"
+            element={
+                <ProtectedRoute>
+              <Layout>
+                <MyAssets />
+              </Layout>
               </ProtectedRoute>
             }
           />
