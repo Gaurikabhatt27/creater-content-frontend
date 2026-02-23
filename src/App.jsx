@@ -12,6 +12,8 @@ import { Toaster } from "react-hot-toast";
 import VerifyOtp from "./pages/Verifyotp";
 import CreateAsset from "./pages/CreateAsset";
 import MyAssets from "./pages/MyAsset";
+import Chat from "./pages/Chat";
+import { SocketProvider } from "./context/SocketContext";
 
 function App() {
   const dispatch = useDispatch();
@@ -23,44 +25,56 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Toaster position="top-right" />
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/verify-otp" element={<VerifyOtp />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Dashboard />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
+        <SocketProvider>
+          <Toaster position="top-right" />
+          <Routes>
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/verify-otp" element={<VerifyOtp />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Dashboard />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/create-asset"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <CreateAsset />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/my-assets"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <MyAssets />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
+            <Route
+              path="/create-asset"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <CreateAsset />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-assets"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <MyAssets />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chat"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Chat />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </SocketProvider>
       </AuthProvider>
     </BrowserRouter>
   );

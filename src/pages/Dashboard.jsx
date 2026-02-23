@@ -1,8 +1,9 @@
 // import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
-// import { getPublicAssets } from "../api/assetApi";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPublicAssetsAsync } from "../store/slices/assetSlice";
+import { useNavigate } from "react-router-dom";
+import { createConversation } from "../api/chatApi";
 import Layout from "../components/Layout";
 
 const Dashboard = () => {
@@ -10,7 +11,9 @@ const Dashboard = () => {
   // const { user } = useAuth();
   // const [assets, setAssets] = useState([]);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { publicAssets: assets, loading, error } = useSelector(state => state.assets);
+  const { user } = useSelector(state => state.auth);
 
   useEffect(() => {
     // fetchAssets();
@@ -21,6 +24,33 @@ const Dashboard = () => {
   //   const data = await getPublicAssets({ page: 1 });
   //   setAssets(data.assets);
   // };
+
+  const handleMessage = async (ownerId) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    if (user._id === ownerId) return; // Don't message self
+
+    try {
+      const data = {
+        senderId: user._id,
+        receiverId: ownerId
+      };
+      // This will either create a new conversation or return an existing one
+      const res = await createConversation(data);
+
+      // Navigate to chat. We can pass state to pre-select it, or just navigate
+      // Since Chat fetches all convos, navigating to /chat is sufficient,
+      // but passing state allows it to automatically open that chat if we set up Chat.jsx to handle it.
+      // For simplicity as requested, we just redirect. 
+      navigate('/chat', { state: { conversationId: res.conversation._id } });
+
+    } catch (err) {
+      console.error("Failed to start conversation:", err);
+    }
+  };
 
   return (
     <>
@@ -52,9 +82,23 @@ const Dashboard = () => {
               <h3 className="font-semibold text-lg">
                 {asset.title}
               </h3>
-              <p className="text-sm text-gray-500">
-                By {asset.owner.name}
-              </p>
+              <div className="flex justify-between items-center mt-2">
+                <p className="text-sm text-gray-500">
+                  By {asset.owner.name}
+                </p>
+
+                {user && user._id !== asset.owner._id && (
+                  <button
+                    onClick={() => handleMessage(asset.owner._id)}
+                    className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                    Message
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         ))}
