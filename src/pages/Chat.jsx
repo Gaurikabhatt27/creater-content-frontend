@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
-import { io } from "socket.io-client";
 import { getConversations, getMessages, sendMessage, createConversation } from "../api/chatApi";
 import { getAllUsers } from "../api/authApi";
 import { useLocation } from "react-router-dom";
+import { useSocket } from "../context/SocketContext";
 
 const Chat = () => {
     const { user } = useSelector(state => state.auth);
@@ -12,11 +12,13 @@ const Chat = () => {
     const [currentChat, setCurrentChat] = useState(null);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
-    const [socket, setSocket] = useState(null);
     const [isTyping, setIsTyping] = useState(false);
     const [otherUserTyping, setOtherUserTyping] = useState(false);
     const [isNewChatOpen, setIsNewChatOpen] = useState(false);
     const [allUsers, setAllUsers] = useState([]);
+
+    // consume global socket and online users instead of local state
+    const { socket, onlineUsers } = useSocket();
 
     const currentChatIdRef = useRef(null);
 
@@ -33,15 +35,6 @@ const Chat = () => {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
-
-    useEffect(() => {
-        const newSocket = io("http://localhost:5500", {
-            withCredentials: true
-        });
-        setSocket(newSocket);
-
-        return () => newSocket.close();
-    }, []);
 
     useEffect(() => {
         if (socket && user) {
@@ -223,6 +216,9 @@ const Chat = () => {
         });
     };
 
+    const activeOtherParticipant = getOtherParticipant(currentChat);
+    const isOnline = activeOtherParticipant && onlineUsers.includes(String(typeof activeOtherParticipant === 'object' ? activeOtherParticipant._id : activeOtherParticipant));
+
     return (
         <div className="flex h-[calc(100vh-80px)] -mx-4 -mb-8 overflow-hidden bg-gray-50 border-t border-gray-200">
 
@@ -297,9 +293,13 @@ const Chat = () => {
                                         <span className="text-blue-500 italic flex items-center gap-1 animate-pulse">
                                             Typing...
                                         </span>
-                                    ) : (
+                                    ) : isOnline ? (
                                         <span className="text-green-500 flex items-center gap-1">
                                             <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span> Online
+                                        </span>
+                                    ) : (
+                                        <span className="text-gray-400 flex items-center gap-1">
+                                            <span className="w-2 h-2 rounded-full bg-gray-400 inline-block"></span> Offline
                                         </span>
                                     )}
                                 </p>
