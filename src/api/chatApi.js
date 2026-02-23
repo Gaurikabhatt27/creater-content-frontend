@@ -15,6 +15,15 @@ export const sendMessage = async (data) => {
     return response.data;
 };
 
+export const sendMediaMessage = async (formData) => {
+    const response = await axiosInstance.post("/chat/message/media", formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
+    return response.data;
+};
+
 export const createConversation = async (data) => {
     const response = await axiosInstance.post("/chat/conversation", data);
     return response.data;

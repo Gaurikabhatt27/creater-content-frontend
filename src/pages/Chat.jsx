@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
-import { getConversations, getMessages, sendMessage, createConversation } from "../api/chatApi";
+import { getConversations, getMessages, sendMessage, sendMediaMessage, createConversation } from "../api/chatApi";
 import { getAllUsers } from "../api/authApi";
 import { useLocation } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
@@ -16,11 +16,12 @@ const Chat = () => {
     const [otherUserTyping, setOtherUserTyping] = useState(false);
     const [isNewChatOpen, setIsNewChatOpen] = useState(false);
     const [allUsers, setAllUsers] = useState([]);
+    const [isUploading, setIsUploading] = useState(false);
 
-    // consume global socket and online users instead of local state
     const { socket, onlineUsers } = useSocket();
 
     const currentChatIdRef = useRef(null);
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         currentChatIdRef.current = currentChat?._id || null;
@@ -59,7 +60,6 @@ const Chat = () => {
                 const currentUserId = typeof user === 'object' && user !== null ? user._id || user.id : user;
                 if (String(data.senderId) !== String(currentUserId)) {
                     setOtherUserTyping(true);
-                    // Hide typing after 3 seconds of no new typing events
                     setTimeout(() => {
                         setOtherUserTyping(false);
                     }, 3000);
@@ -83,7 +83,6 @@ const Chat = () => {
                 const convos = res.conversations || [];
                 setConversations(convos);
 
-                // Check if we navigated here with a specific conversation to open
                 if (location.state?.conversationId) {
                     const targetConvo = convos.find(c => c._id === location.state.conversationId);
                     if (targetConvo) {
@@ -95,7 +94,6 @@ const Chat = () => {
             }
         };
         fetchConvos();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location.state?.conversationId]);
 
     useEffect(() => {
@@ -146,13 +144,11 @@ const Chat = () => {
     };
 
     const handleSend = async (e) => {
-        // Handle both form submission and button click safely
         if (e) e.preventDefault();
 
         const messageText = newMessage.trim();
         if (!messageText || !currentChat) return;
 
-        // Immediately clear input for snappy UI
         setNewMessage("");
 
         const otherParticipant = getOtherParticipant(currentChat);
@@ -183,8 +179,54 @@ const Chat = () => {
             }));
         } catch (err) {
             console.error("Failed to send message", err);
-            // Revert on failure
             setNewMessage(messageText);
+        }
+    };
+
+    const handleMediaUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file || !currentChat || !user) return;
+
+        const otherParticipant = getOtherParticipant(currentChat);
+        if (!otherParticipant) return;
+
+        const currentUserId = typeof user === 'object' && user !== null ? user._id || user.id : user;
+        const receiverId = typeof otherParticipant === 'object' && otherParticipant !== null ? otherParticipant._id : otherParticipant;
+
+        setIsUploading(true);
+
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("conversationId", currentChat._id);
+            formData.append("senderId", currentUserId);
+            formData.append("receiverId", receiverId);
+            if (newMessage.trim()) {
+                formData.append("text", newMessage.trim());
+                setNewMessage("");
+            } else {
+                formData.append("text", "Media Attachment");
+            }
+
+            const res = await sendMediaMessage(formData);
+            const sentMessage = res.message;
+            setMessages(prev => [...prev, sentMessage]);
+
+            socket.emit("sendMessage", { ...sentMessage, receiver: receiverId });
+
+            setConversations(prev => prev.map(conv => {
+                if (conv._id === currentChat._id) {
+                    return { ...conv, lastMessage: sentMessage };
+                }
+                return conv;
+            }));
+        } catch (err) {
+            console.error("Failed to upload media", err);
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
         }
     };
 
@@ -314,9 +356,7 @@ const Chat = () => {
                                     </div>
                                 )}
                                 {messages.map((msg, idx) => {
-                                    // Fix: handle if sender is just an ID string, or a populated mongoose object
                                     const senderId = typeof msg.sender === 'object' && msg.sender !== null ? msg.sender._id : msg.sender;
-                                    // Handle user object as well just in case
                                     const currentUserId = typeof user === 'object' && user !== null ? user._id || user.id : user;
 
                                     const isMe = String(senderId) === String(currentUserId);
@@ -327,6 +367,15 @@ const Chat = () => {
                                                 ? "bg-blue-600 text-white rounded-br-none"
                                                 : "bg-white border border-gray-100 text-gray-800 rounded-bl-none"
                                                 }`}>
+                                                {msg.mediaUrl && (
+                                                    <div className="mb-2 rounded-lg overflow-hidden">
+                                                        {msg.mediaType === "video" ? (
+                                                            <video controls className="max-w-full h-auto max-h-64 object-cover" src={msg.mediaUrl} />
+                                                        ) : (
+                                                            <img className="max-w-full h-auto max-h-64 object-cover" src={msg.mediaUrl} alt="attachment" />
+                                                        )}
+                                                    </div>
+                                                )}
                                                 <p className="text-[15px] leading-relaxed break-words">{msg.text}</p>
                                                 <span className={`text-[10px] mt-2 block opacity-70 ${isMe ? "text-right" : "text-left"}`}>
                                                     {new Date(msg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -341,6 +390,24 @@ const Chat = () => {
 
                         <div className="p-4 bg-white border-t border-gray-200">
                             <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex gap-3 items-center">
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={isUploading}
+                                    className="p-3 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                                    title="Attach File"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                    </svg>
+                                </button>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleMediaUpload}
+                                    className="hidden"
+                                    accept="image/*,video/*"
+                                />
                                 <input
                                     type="text"
                                     value={newMessage}
@@ -351,18 +418,26 @@ const Chat = () => {
                                             handleSend();
                                         }
                                     }}
-                                    placeholder="Type your message..."
-                                    className="flex-1 bg-gray-100 border-transparent rounded-full px-6 py-3 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all shadow-inner"
+                                    placeholder={isUploading ? "Uploading media..." : "Type your message..."}
+                                    disabled={isUploading}
+                                    className="flex-1 bg-gray-100 border-transparent rounded-full px-6 py-3 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all shadow-inner disabled:bg-gray-200"
                                 />
                                 <button
                                     type="button"
                                     onClick={handleSend}
-                                    disabled={!newMessage.trim()}
+                                    disabled={!newMessage.trim() || isUploading}
                                     className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <svg className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                                    </svg>
+                                    {isUploading ? (
+                                        <svg className="animate-spin w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    ) : (
+                                        <svg className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                        </svg>
+                                    )}
                                 </button>
                             </form>
                         </div>
