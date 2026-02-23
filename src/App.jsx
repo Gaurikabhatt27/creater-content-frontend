@@ -12,6 +12,7 @@ import { Toaster } from "react-hot-toast";
 import VerifyOtp from "./pages/Verifyotp";
 import CreateAsset from "./pages/CreateAsset";
 import MyAssets from "./pages/MyAsset";
+import Chat from "./pages/Chat";
 
 function App() {
   const dispatch = useDispatch();
@@ -56,6 +57,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <MyAssets />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Chat />
                 </Layout>
               </ProtectedRoute>
             }

@@ -19,6 +19,11 @@ export const logoutUser = async () => {
   await axiosInstance.post("/auth/logout");
 }
 
+export const getAllUsers = async () => {
+  const res = await axiosInstance.get("/auth/users");
+  return res.data;
+};
+
 export const sendOtp = async (data) => {
   const res = await axiosInstance.post("/auth/send-otp", data);
   return res.data;

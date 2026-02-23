@@ -34,12 +34,11 @@ const Navbar = () => {
       <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
         {/* <Link to="/" className="text-xl font-bold text-blue-600"> */}
 
-        {/* Logo */}
         <Link
           to="/dashboard"
           className="text-2xl font-bold text-blue-600"
         >
-          CreatorConnect
+          Pixora
         </Link>
 
         {/* {user ? (
@@ -81,6 +80,12 @@ const Navbar = () => {
                 className="text-gray-700 hover:text-blue-600"
               >
                 My Assets
+              </Link>
+              <Link
+                to="/chat"
+                className="text-gray-700 hover:text-blue-600"
+              >
+                Chat
               </Link>
 
               {/* Username */}
