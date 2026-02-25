@@ -13,6 +13,7 @@ import VerifyOtp from "./pages/Verifyotp";
 import CreateAsset from "./pages/CreateAsset";
 import MyAssets from "./pages/MyAsset";
 import Chat from "./pages/Chat";
+import BuyTokens from "./pages/buyTokens";
 import { SocketProvider } from "./context/SocketContext";
 
 function App() {
@@ -69,6 +70,16 @@ function App() {
                 <ProtectedRoute>
                   <Layout>
                     <Chat />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/buy-tokens"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <BuyTokens />
                   </Layout>
                 </ProtectedRoute>
               }

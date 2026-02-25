@@ -44,7 +44,9 @@ const authSlice = createSlice({
     extraReducers: (builder) => {
         // Fetch User
         builder.addCase(fetchUserAsync.pending, (state) => {
-            state.loading = true;
+            if (!state.user) {
+                state.loading = true;
+            }
             state.error = null;
         });
         builder.addCase(fetchUserAsync.fulfilled, (state, action) => {
