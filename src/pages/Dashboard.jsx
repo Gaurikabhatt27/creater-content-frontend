@@ -31,20 +31,14 @@ const Dashboard = () => {
       return;
     }
 
-    if (user._id === ownerId) return; // Don't message self
+    if (user._id === ownerId) return; 
 
     try {
       const data = {
         senderId: user._id,
         receiverId: ownerId
       };
-      // This will either create a new conversation or return an existing one
       const res = await createConversation(data);
-
-      // Navigate to chat. We can pass state to pre-select it, or just navigate
-      // Since Chat fetches all convos, navigating to /chat is sufficient,
-      // but passing state allows it to automatically open that chat if we set up Chat.jsx to handle it.
-      // For simplicity as requested, we just redirect. 
       navigate('/chat', { state: { conversationId: res.conversation._id } });
 
     } catch (err) {

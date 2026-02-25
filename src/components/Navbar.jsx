@@ -88,6 +88,22 @@ const Navbar = () => {
                 Chat
               </Link>
 
+              {/* Tokens & Buy Tokens */}
+              <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100">
+                <span className="text-blue-800 font-semibold flex items-center gap-1">
+                  <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
+                  </svg>
+                  {user.tokenBalance ?? 0}
+                </span>
+                <Link
+                  to="/buy-tokens"
+                  className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition font-medium"
+                >
+                  Buy +
+                </Link>
+              </div>
+
               {/* Username */}
               <span className="text-gray-600 text-sm">
                 {user.name}

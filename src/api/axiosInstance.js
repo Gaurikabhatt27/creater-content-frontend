@@ -13,8 +13,8 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       // Prevent infinite redirect loops if already on login/signup page
       if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
-        errorToast("Unauthorized. Please login again.");
-        window.location.href = "/login";
+        errorToast("Unauthorized: Session Expired.");
+        // window.location.href = "/login"; // Removed aggressive redirect to allow UI to show errors
       }
     }
     return Promise.reject(error);
